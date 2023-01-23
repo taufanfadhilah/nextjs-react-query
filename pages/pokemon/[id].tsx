@@ -1,7 +1,8 @@
 import React from "react";
 import axios from "axios";
-import { useQuery } from "react-query";
+import { QueryClient, dehydrate, useQuery } from "react-query";
 import { useRouter } from "next/router";
+import { GetStaticPaths, GetStaticProps } from "next";
 import PokemonCard from "@/components/PokemonCard";
 
 const fetchPokemon = (id: string) =>
@@ -53,3 +54,23 @@ export default function Pokemon() {
 
   return <></>;
 }
+
+export const getStaticProps: GetStaticProps = async (context) => {
+  const id = context.params?.id as string;
+  const queryClient = new QueryClient();
+
+  await queryClient.prefetchQuery(["getPokemon", id], () => fetchPokemon(id));
+
+  return {
+    props: {
+      dehydratedState: dehydrate(queryClient),
+    },
+  };
+};
+
+export const getStaticPaths: GetStaticPaths = async () => {
+  return {
+    paths: [],
+    fallback: "blocking",
+  };
+};
